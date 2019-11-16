@@ -32,16 +32,16 @@ type role SortedBy nominal nominal
 -- resulting value will satisfy `SortedBy comp`.
 sortBy :: ((a -> a -> Ordering) ~~ comp)
        -> [a]
-       -> ([a] ?SortedBy comp)
+       -> ([a] ?| SortedBy comp)
 sortBy (The comp) xs = assert (L.sortBy comp xs)
 
 -- Merge the two lists using the comparator named `comp`. The lists must
 -- have already been sorted using `comp`, and the result will also be
 -- sorted with respect to `comp`.
 mergeBy :: ((a -> a -> Ordering) ~~ comp)
-        -> ([a] ?SortedBy comp)
-        -> ([a] ?SortedBy comp)
-        -> ([a] ?SortedBy comp)
+        -> ([a] ?| SortedBy comp)
+        -> ([a] ?| SortedBy comp)
+        -> ([a] ?| SortedBy comp)
 mergeBy (The comp) (The xs) (The ys) = assert (unsafeMergeBy comp xs ys)
 
 newtype Opposite comp = Opposite Defn
@@ -81,8 +81,8 @@ main = do
     -- Now reverse the two lists and merge them using the
     -- descending comparator. This requires a proof that
     -- the reversed lists are sorted by the opposite of `up`,
-    -- which we provide using (...?).
+    -- which we provide using (.|).
     let down = opposite up
         ans2 = mergeBy down (rev' xs) (rev' ys)
-        rev' = rev ...? rev_ord_lemma
+        rev' = rev .| rev_ord_lemma
     print (the ans2)
