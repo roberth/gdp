@@ -6,6 +6,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PolyKinds             #-}
 {-# LANGUAGE RoleAnnotations       #-}
+{-# LANGUAGE ViewPatterns          #-}
+{-# LANGUAGE PatternSynonyms       #-}
+{-# LANGUAGE ExistentialQuantification #-}
 
 {-|
   Module      :  Theory.Named
@@ -20,6 +23,7 @@ module Theory.Named
     Named, type (^::)
   , name
   , name2, name3
+  , pattern New
 
   -- ** Definitions
   , Defining
@@ -44,6 +48,15 @@ type role Named nominal nominal
 type name ^:: a = Named a name
 
 instance The (Named a name) a
+
+-- Existential for the purpose of unceremoniously defining pattern 'New'.
+-- If you need existentials in your own code, use 'Data.Refined.?|'.
+data SomeNamed k a = forall (name :: k). SomeNamed (name ^:: a)
+someNamed :: a -> SomeNamed k a
+someNamed x = SomeNamed (Named x)
+
+pattern New :: forall a k. () => forall (name :: k). (name ^:: a) -> a
+pattern New t <- (someNamed -> SomeNamed t)
 
 -- | Introduce a name for the argument, and pass the
 --   named argument into the given function.
