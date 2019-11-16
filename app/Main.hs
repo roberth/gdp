@@ -30,7 +30,7 @@ type role SortedBy nominal nominal
 
 -- Sort a value using the comparator named `comp`. The
 -- resulting value will satisfy `SortedBy comp`.
-sortBy :: ((a -> a -> Ordering) ~~ comp)
+sortBy :: (comp ^:: (a -> a -> Ordering))
        -> [a]
        -> ([a] ?| SortedBy comp)
 sortBy (The comp) xs = assert (L.sortBy comp xs)
@@ -38,7 +38,7 @@ sortBy (The comp) xs = assert (L.sortBy comp xs)
 -- Merge the two lists using the comparator named `comp`. The lists must
 -- have already been sorted using `comp`, and the result will also be
 -- sorted with respect to `comp`.
-mergeBy :: ((a -> a -> Ordering) ~~ comp)
+mergeBy :: (comp ^:: (a -> a -> Ordering))
         -> ([a] ?| SortedBy comp)
         -> ([a] ?| SortedBy comp)
         -> ([a] ?| SortedBy comp)
@@ -48,8 +48,8 @@ newtype Opposite comp = Opposite Defn
 type role Opposite nominal
 
 -- A named version of the opposite ordering.
-opposite :: ((a -> a -> Ordering) ~~ comp)
-         -> ((a -> a -> Ordering) ~~ Opposite comp)
+opposite :: (comp ^:: (a -> a -> Ordering))
+         -> (Opposite comp ^:: (a -> a -> Ordering))
 opposite (The comp) = defn $ \x y -> case comp x y of
   GT -> LT
   EQ -> EQ
@@ -59,7 +59,7 @@ newtype Reverse xs = Reverse Defn
 type role Reverse nominal
 
 -- A named version of Prelude's 'reverse'.
-rev :: ([a] ~~ xs) -> ([a] ~~ Reverse xs)
+rev :: (xs ^:: [a]) -> (Reverse xs ^:: [a])
 rev (The xs) = defn (reverse xs)
 
 -- A lemma about reversing sorted lists.

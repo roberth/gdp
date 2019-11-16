@@ -17,7 +17,7 @@
 
 module Theory.Named
   ( -- * Named values
-    Named, type (~~)
+    Named, type (^::)
   , name
   , name2, name3
 
@@ -34,28 +34,28 @@ import Data.Coerce
   Named values
 --------------------------------------------------}
 
--- | A value of type @a ~~ name@ has the same runtime
+-- | A value of type @name ^:: a@ has the same runtime
 --   representation as a value of type @a@, with a
 --   phantom "name" attached.
-newtype Named name a = Named a
+newtype Named a name = Named a
 type role Named nominal nominal
 
 -- | An infix alias for 'Named'.
-type a ~~ name = Named name a
+type name ^:: a = Named a name
 
-instance The (Named name a) a
+instance The (Named a name) a
 
 -- | Introduce a name for the argument, and pass the
 --   named argument into the given function.
-name :: a -> (forall name. a ~~ name -> t) -> t
+name :: a -> (forall name. name ^:: a -> t) -> t
 name x k = k (coerce x)
 
 -- | Same as 'name', but names two values at once.
-name2 :: a -> b -> (forall name1 name2. (a ~~ name1) -> (b ~~ name2) -> t) -> t
+name2 :: a -> b -> (forall name1 name2. (name1 ^:: a) -> (name2 ^:: b) -> t) -> t
 name2 x y k = k (coerce x) (coerce y)
 
 -- | Same as 'name', but names three values at once.
-name3 :: a -> b -> c -> (forall name1 name2 name3. (a ~~ name1) -> (b ~~ name2) -> (c ~~ name3) -> t) -> t
+name3 :: a -> b -> c -> (forall name1 name2 name3. (name1 ^:: a) -> (name2 ^:: b) -> (name3 ^:: c) -> t) -> t
 name3 x y z k = k (coerce x) (coerce y) (coerce z)
 
 
@@ -75,13 +75,13 @@ name3 x y z k = k (coerce x) (coerce y) (coerce z)
 @
 newtype Bob = Bob Defn
 
-bob :: Int ~~ Bob
+bob :: Bob ^:: Int
 bob = defn 42
 
 newtype FooOf name = FooOf Defn
 type role FooOf nominal -- disallow coerce :: FooOf name1 -> FooOf name2
 
-fooOf :: (Int ~~ name) -> (Int ~~ FooOf name)
+fooOf :: (name ^:: Int) -> (FooOf name ^:: Int)
 fooOf x = defn (the x)
 @
 -}
@@ -95,5 +95,5 @@ type Defining p = (Coercible p Defn, Coercible Defn p)
 
 -- | In the module where the name @f@ is defined, attach the
 --   name @f@ to a value.
-defn :: Defining f => a -> (a ~~ f)
+defn :: Defining f => a -> (f ^:: a)
 defn = coerce

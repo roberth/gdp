@@ -57,55 +57,55 @@ type role Tail nominal
 -- | Possible shapes of a list, along with evidence that the list
 --   has the given shape.
 data ListCase a xs
-  = IsCons_ (Proof (IsCons xs)) (a ~~ Head xs) ([a] ~~ Tail xs)
+  = IsCons_ (Proof (IsCons xs)) (Head xs ^:: a) (Tail xs ^:: [a])
   | IsNil_  (Proof (IsNil  xs))
 
 -- | Classify a named list by shape, producing evidence that the
 --   list matches the corresponding case.
-classify :: ([a] ~~ xs) -> ListCase a xs
+classify :: (xs ^:: [a]) -> ListCase a xs
 classify xs = case the xs of
     (h:t) -> IsCons_ axiom (defn h) (defn t)
     []    -> IsNil_  axiom
 
-pattern IsCons :: Proof (IsCons xs) -> (a ~~ Head xs) -> ([a] ~~ Tail xs) -> ([a] ~~ xs)
+pattern IsCons :: Proof (IsCons xs) -> (Head xs ^:: a) -> (Tail xs ^:: [a]) -> (xs ^:: [a])
 pattern IsCons proof hd tl <- (classify -> IsCons_ proof hd tl)
 
-pattern IsNil :: Proof (IsNil xs) -> ([a] ~~ xs)
+pattern IsNil :: Proof (IsNil xs) -> (xs ^:: [a])
 pattern IsNil proof <- (classify -> IsNil_ proof)
 
 -- | A variation on @ListCase@ that passes the shape facts implicitly. Pattern-matching on a
 --   constructor of @ListCase'@ will bring a shape proof into the implicit context.
 data ListCase' a xs where
-    Cons_ :: Fact (IsCons xs) => (a ~~ Head xs) -> ([a] ~~ Tail xs) -> ListCase' a xs
+    Cons_ :: Fact (IsCons xs) => (Head xs ^:: a) -> (Tail xs ^:: [a]) -> ListCase' a xs
     Nil_  :: Fact (IsNil  xs) => ListCase' a xs
 
 -- | Classify a named list by shape, producing /implicit/ evidence that the
 --   list matches the corresponding case.
-classify' :: forall a xs. ([a] ~~ xs) -> ListCase' a xs
+classify' :: forall a xs. (xs ^:: [a]) -> ListCase' a xs
 classify' xs = case the xs of
     (h:t) -> note (axiom :: Proof (IsCons xs)) (Cons_ (defn h) (defn t))
     []    -> note (axiom :: Proof (IsNil  xs))  Nil_
 
-pattern Cons :: () => Fact (IsCons xs) => (a ~~ Head xs) -> ([a] ~~ Tail xs) -> ([a] ~~ xs)
+pattern Cons :: () => Fact (IsCons xs) => (Head xs ^:: a) -> (Tail xs ^:: [a]) -> (xs ^:: [a])
 pattern Cons hd tl <- (classify' -> Cons_ hd tl)
 
-pattern Nil :: () => Fact (IsNil xs) => ([a] ~~ xs)
+pattern Nil :: () => Fact (IsNil xs) => (xs ^:: [a])
 pattern Nil <- (classify' -> Nil_)
 
 -- | Extract the first element from a non-empty list.
-head :: Fact (IsCons xs) => ([a] ~~ xs) -> (a ~~ Head xs)
+head :: Fact (IsCons xs) => (xs ^:: [a]) -> (Head xs ^:: a)
 head (The xs) = defn (Prelude.head xs)
 
 -- | Extract all but the first element from a non-empty list.
-tail :: Fact (IsCons xs) => ([a] ~~ xs) -> ([a] ~~ Tail xs)
+tail :: Fact (IsCons xs) => (xs ^:: [a]) -> (Tail xs ^:: [a])
 tail (The xs) = defn (Prelude.tail xs)
 
 -- | Construct a list from an element and another list.
-cons :: (a ~~ x) -> ([a] ~~ xs) -> ([a] ~~ Cons' x xs)
+cons :: (x ^:: a) -> (xs ^:: [a]) -> (Cons' x xs ^:: [a])
 cons (The x) (The xs) = defn (x:xs)
 
 -- | The empty list, named @Nil'@.
-nil :: ([a] ~~ Nil')
+nil :: (Nil' ^:: [a])
 nil = defn []
 
 -- | A name for referring to the result of a @cons@ operation.
@@ -147,5 +147,5 @@ consIsList _ = axiom
 nilIsList :: Proof (IsNil xs) -> Proof (IsList xs)
 nilIsList _ = axiom
 
-listIsList :: ([a] ~~ xs) -> Proof (IsList xs)
+listIsList :: (xs ^:: [a]) -> Proof (IsList xs)
 listIsList _ = axiom

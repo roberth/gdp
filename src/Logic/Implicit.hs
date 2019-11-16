@@ -33,22 +33,22 @@ type role WithFact nominal nominal
 note :: forall p t. Proof p -> (Fact p => t) -> t
 note _ k = unsafeCoerce (WithFact k :: WithFact p t) ()
 
-{-| Apply an implication to a predicate in the implicit context. The @(a ~~ n)@
+{-| Apply an implication to a predicate in the implicit context. The @(n ^:: a)@
     parameter is not actually used; it's type is used to help select a specific
     fact from the context.
 
 @
 -- A safe 'head' function, using an implicitly-passed safety proof.
-head :: Fact (IsCons xs) => ([a] ~~ xs) -> a
+head :: Fact (IsCons xs) => (xs ^:: [a]) -> a
 head xs = Prelude.head (the xs)
 
 -- Reverse, and a lemma.
-reverse :: ([a] ~~ xs) -> ([a] ~~ Reverse xs)
+reverse :: (xs ^:: [a]) -> (Reverse xs ^:: [a])
 revConsLemma :: Proof (IsCons xs) -> Proof (IsCons (Reverse xs))
 
 -- Implement a safe 'last' function.
-last :: Fact (IsCons xs) => ([a] ~~ xs) -> a
+last :: Fact (IsCons xs) => (xs ^:: [a]) -> a
 last xs = note (revConsLemma `on` xs) $ head (reverse xs)
 -}
-on :: Fact (p n) => (Proof (p n) -> Proof q) -> (a ~~ n) -> Proof q
+on :: Fact (p n) => (Proof (p n) -> Proof q) -> (n ^:: a) -> Proof q
 on impl _ = impl known

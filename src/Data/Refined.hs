@@ -117,13 +117,13 @@ assert x = name x (\x -> unname (x ^| axiom))
 -- | Existential introduction for names: given a named value of
 --   type @a@ that satisfies a predicate @p@, coerce to a value
 --   of type @a ?| p@.
-unname :: (a ~~ name ^| p name) -> (a ?| p)
+unname :: (name ^:: a ^| p name) -> (a ?| p)
 unname = coerce . the
 
 -- | Existential elimination for names: given a value of type
 --   @a ?| p@, re-introduce a new name to produce a value of type
---   @a ~~ name ^| p name@.
-rename :: (a ?| p) -> (forall name. (a ~~ name ^| p name) -> t) -> t
+--   @name ^:: a ^| p name@.
+rename :: (a ?| p) -> (forall name. (name ^:: a ^| p name) -> t) -> t
 rename x k = name (the x) (\x -> k (x ^| axiom))
 
 {-| Take a simple function with one named argument and a named return,
@@ -137,7 +137,7 @@ type role Nonempty nominal -- disallows coercion of Nonempty's argument.
 newtype Reverse  xs = Reverse  Defn
 type role Reverse nominal
 
-rev :: ([a] ~~ xs) -> ([a] ~~ Reverse xs)
+rev :: (xs ^:: [a]) -> (Reverse xs ^:: [a])
 rev xs = defn (reverse (the xs))
 
 rev_nonempty_lemma :: NonEmpty xs -> Proof (NonEmpty (Reverse xs))
@@ -147,7 +147,7 @@ rev' = rev .| rev_nonempty_lemma
 @
 -}
 
-(.|) :: (forall name. (a ~~ name) -> (b ~~ f name))
+(.|) :: (forall name. (name ^:: a) -> (f name ^:: b))
       -> (forall name. p name -> Proof (q (f name)))
       -> (a ?| p) -> (b ?| q)
 (.|) f _ x = rename x (\x -> unname (f (exorcise x) ^| axiom))
@@ -155,14 +155,14 @@ rev' = rev .| rev_nonempty_lemma
 -- | Traverse a collection of refined values, re-introducing names
 --   in the body of the action.
 traverseP :: (Traversable t, Applicative f)
-          => (forall name. (a ~~ name ^| p name) -> f b)
+          => (forall name. (name ^:: a ^| p name) -> f b)
           -> t (a ?| p)
           -> f (t b)
 traverseP f = traverse (\x -> rename x f)
 
 -- | Same as 'traverseP', but ignores the action's return value.
 traverseP_ :: (Foldable t, Applicative f)
-          => (forall name. (a ~~ name ^| p name) -> f b)
+          => (forall name. (name ^:: a ^| p name) -> f b)
           -> t (a ?| p)
           -> f ()
 traverseP_ f = traverse_ (\x -> rename x f)
@@ -170,13 +170,13 @@ traverseP_ f = traverse_ (\x -> rename x f)
 -- | Same as 'traverse', with the argument order flipped.
 forP :: (Traversable t, Applicative f)
       => t (a ?| p)
-      -> (forall name. (a ~~ name ^| p name) -> f b)
+      -> (forall name. (name ^:: a ^| p name) -> f b)
       -> f (t b)
 forP x f = traverseP f x
 
 -- | Same as 'traverse_', with the argument order flipped.
 forP_ :: (Foldable t, Applicative f)
       => t (a ?| p)
-      -> (forall name. (a ~~ name ^| p name) -> f b)
+      -> (forall name. (name ^:: a ^| p name) -> f b)
       -> f ()
 forP_ x f = traverseP_ f x

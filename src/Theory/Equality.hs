@@ -106,7 +106,7 @@ substituteR _ _ _ = axiom
 
 -- | Test if the two named arguments are equal and, if so, produce a proof
 --   of equality for the names.
-same :: Lawful Eq a => (a ~~ x) -> (a ~~ y) -> Maybe (Proof (x == y))
+same :: Lawful Eq a => (x ^:: a) -> (y ^:: a) -> Maybe (Proof (x == y))
 same (The x) (The y) = if x == y then Just axiom else Nothing
 
 {-| Reflect an equality between @x@ and @y@ into a propositional
@@ -115,19 +115,19 @@ same (The x) (The y) = if x == y then Just axiom else Nothing
 @
 newtype Bob = Bob Defn
 
-bob :: Int ~~ Bob
+bob :: Bob ^:: Int
 bob = defn 42
 
-needsBob :: (Int ~~ Bob) -> Int
+needsBob :: (Bob ^:: Int) -> Int
 needsBob x = the x + the x
 
-isBob :: (Int ~~ name) -> Maybe (Proof (name == Bob))
+isBob :: (name ^:: Int) -> Maybe (Proof (name == Bob))
 isBob = same x bob
 
-f :: (Int ~~ name) -> Int
+f :: (name ^:: Int) -> Int
 f x = case reflectEq \<$\> isBob x of
   Nothing   -> 17
-  Just Refl -> needsBob x x
+  Just Refl -> needsBob x
 @
 -}
 reflectEq :: Proof (x == y) -> (x :~: y)
